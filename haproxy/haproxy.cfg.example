@@ -1,5 +1,7 @@
 global
     log stdout format raw daemon
+    ssl-default-bind-options no-sslv3 no-tlsv10 no-tlsv11
+    ssl-default-bind-ciphers PROFILE=SYSTEM
 
 defaults
     log     global
@@ -11,6 +13,10 @@ defaults
 
 frontend http_front
     bind *:80
+    redirect scheme https code 301 if !{ ssl_fc }
+
+frontend https_front
+    bind *:443 ssl crt /etc/haproxy/certs/uparzone.com.pem
     default_backend http_back
 
 backend http_back

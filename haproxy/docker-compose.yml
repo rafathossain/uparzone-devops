@@ -6,6 +6,8 @@ services:
     container_name: haproxy
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./certs:/etc/haproxy/certs
     restart: unless-stopped
