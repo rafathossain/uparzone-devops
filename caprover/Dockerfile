@@ -9,22 +9,18 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# === STAGE 2: PHP + CGI ===
-FROM php:8.3-apache AS php-builder
+# === STAGE 2: PHP + Composer ===
+FROM php:8.3-fpm AS php-builder
 
 WORKDIR /var/www
 
-# Install necessary packages, including PHP extensions
 RUN apt-get update && apt-get install -y \
     git curl zip unzip libzip-dev libpng-dev libonig-dev libxml2-dev \
     libjpeg-dev libfreetype6-dev cron supervisor \
+    && docker-php-ext-configure gd \
     && docker-php-ext-configure zip \
     && docker-php-ext-install pdo pdo_mysql mbstring zip gd
 
-# Install PHP CGI
-RUN apt-get install -y php-cgi
-
-# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 COPY . .
@@ -32,21 +28,15 @@ COPY . .
 # Copy built assets from Node stage
 COPY --from=node-builder /app/public /var/www/public
 
-# Run composer install
-RUN composer install --no-dev --optimize-autoloader -vvv \
-    && php -m | grep zip \
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-zip \
     && chown -R www-data:www-data /var/www \
     && chmod -R 755 /var/www/storage
 
 # === FINAL STAGE ===
-FROM nginx:latest
-
-# Install PHP CGI
-RUN apt-get update && apt-get install -y php-cgi
+FROM php:8.3-fpm
 
 WORKDIR /var/www
 
-# Copy over files from the build stages
 COPY --from=php-builder /var/www /var/www
 COPY --from=php-builder /usr/bin/composer /usr/bin/composer
 COPY --from=php-builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
@@ -56,11 +46,13 @@ COPY --from=php-builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 RUN apt-get update && apt-get install -y nginx cron supervisor \
     && mkdir -p /run/php
 
-# Nginx config
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Entry scripts
 COPY deploy/entrypoint.sh /entrypoint.sh
+#COPY deploy/queue.sh /queue.sh
+#COPY deploy/scheduler.sh /scheduler.sh
+RUN #chmod +x /entrypoint.sh /queue.sh /scheduler.sh
 RUN chmod +x /entrypoint.sh
 
 EXPOSE 80
