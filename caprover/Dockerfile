@@ -10,7 +10,7 @@ COPY . .
 RUN npm run build
 
 # === STAGE 2: PHP + Composer ===
-FROM php:8.2-fpm AS php-builder
+FROM php:8.3-fpm AS php-builder
 
 WORKDIR /var/www
 
@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
     git curl zip unzip libzip-dev libpng-dev libonig-dev libxml2-dev \
     libjpeg-dev libfreetype6-dev cron supervisor \
     && docker-php-ext-configure gd \
-    && docker-php-ext-install pdo pdo_mysql mbstring zip gd ext-zip
+    && docker-php-ext-install pdo pdo_mysql mbstring zip gd
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -32,7 +32,7 @@ RUN composer install --no-dev --optimize-autoloader \
     && chmod -R 755 /var/www/storage
 
 # === FINAL STAGE ===
-FROM php:8.2-fpm
+FROM php:8.3-fpm
 
 WORKDIR /var/www
 
