@@ -15,7 +15,7 @@ services:
     restart: always
     network_mode: host
     env_file:
-      - .env
+      - /home/redis/.env
     entrypoint: [ "bash", "/usr/local/bin/redis.sh" ]
     volumes:
       - /home/redis:/data
