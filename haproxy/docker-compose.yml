@@ -6,14 +6,17 @@ services:
     container_name: haproxy
     network_mode: host
     volumes:
-      - /home/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-      - /home/certs:/etc/haproxy/certs
+      - /home/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - /home/haproxy/certs:/etc/haproxy/certs
     restart: always
 
   redis:
     image: redis:latest
     restart: always
     network_mode: host
-    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    env_file:
+      - .env
+    entrypoint: [ "bash", "/usr/local/bin/redis.sh" ]
     volumes:
       - /home/redis:/data
+      - ./redis.sh:/usr/local/bin/redis.sh
