@@ -4,19 +4,16 @@ services:
   haproxy:
     image: haproxy:lts-bookworm
     container_name: haproxy
-    ports:
-      - "80:80"
-      - "443:443"
+    network_mode: host
     volumes:
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-      - ./certs:/etc/haproxy/certs
-    restart: unless-stopped
+      - /home/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - /home/certs:/etc/haproxy/certs
+    restart: always
 
   redis:
     image: redis:latest
     restart: always
-    ports:
-      - '6379:6379'
+    network_mode: host
     command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
     volumes:
-      - ./cache:/data
+      - /home/redis:/data
